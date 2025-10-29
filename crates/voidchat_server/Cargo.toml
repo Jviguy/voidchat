@@ -9,6 +9,5 @@ async-net = "2.0.0"
 async-signal = "0.2.13"
 clap = { version = "4.5.50", features = ["derive", "env"] }
 dotenvy = { version = "0.15.7", features = ["clap"] }
-futures-lite = "2.6.1"
 smol = "2.0.2"
-voidchat_proto = {path = "../voidchat_proto"}
+voidchat_proto = { path = "../voidchat_proto", features = ["stream"] }

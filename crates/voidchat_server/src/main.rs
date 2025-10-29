@@ -1,11 +1,10 @@
-use smol::future::FutureExt;
-use std::net::SocketAddr;
-use async_net::{TcpListener, TcpStream};
-use clap::Parser;
 use anyhow::Result;
+use async_net::{TcpListener, TcpStream};
 use async_signal::{Signal, Signals};
-use smol::io::AsyncReadExt;
+use clap::Parser;
+use smol::future::FutureExt;
 use smol::stream::StreamExt;
+use std::net::SocketAddr;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -19,8 +18,6 @@ struct Args {
     password: Option<String>,
 }
 
-
-
 fn main() {
     let config = Args::parse();
     let hash = config.password.map(voidchat_proto::hash_password);
@@ -31,11 +28,9 @@ fn main() {
         // holds the handles of all the tasks we are running.
         let mut tasks = vec![];
 
-        let mut signals = Signals::new([
-            Signal::Term,
-            Signal::Quit,
-            Signal::Int,
-        ])?.fuse();
+        let mut signals = Signals::new([Signal::Term, Signal::Quit, Signal::Int])?
+            .fuse()
+            .next();
 
         let accept_loop = async {
             loop {
@@ -43,31 +38,16 @@ fn main() {
                 let handle = smol::spawn(handle_function(con, addr));
                 tasks.push(handle);
             }
+            Ok::<(), anyhow::Error>(())
         };
 
-        let result = accept_loop.or(signals.next()).await;
-
-        match result {
-            // `accept_loop` finished (which means it errored)
-            futures_lite::future::Either::Left(Err(e)) => {
-                eprintln!("Server accept loop failed: {}", e);
-            },
-            // `signals.next()` finished (we got a signal!)
-            futures_lite::future::Either::Right(Some(signal)) => {
-                println!("\nReceived signal {}. Shutting down...", signal);
-            },
-            _ => {
-                // This would happen if the accept loop Ok'd or signals stream ended
-                println!("\nShutting down...");
-            }
-        }
+        let winner = accept_loop.or(signals).await;
 
         Ok::<(), anyhow::Error>(())
-    }).expect("TODO: panic message");
+    })
+    .expect("TODO: panic message");
 }
 
 async fn handle_function(mut con: TcpStream, addr: SocketAddr) -> Result<()> {
-    loop {
-
-    }
+    loop {}
 }

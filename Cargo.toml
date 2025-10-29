@@ -1,0 +1,3 @@
+[workspace]
+resolver = "3"
+members = ["crates/voidchat_proto", "crates/voidchat_server", "crates/voidchat_client"]
